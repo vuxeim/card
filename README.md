@@ -1,6 +1,5 @@
 # card
----
-# How to use
+## How to use
 1. Edit `data` variable in `card.py`.
 2. See the results:
 ```shell
@@ -26,5 +25,5 @@ $ curl your_domain.net/file
 |                                            |
 ╰--------------------------------------------╯
 ```
-# Troubleshooting
+## Troubleshooting
 Use `curl` with flag `-L` if nothing is shown.
