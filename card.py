@@ -24,11 +24,33 @@ colors = {
 }
 
 
+# bro i need no colorama
+_color_names = list(colors.keys()) + ['reset', 'bold', 'under', 'reversed']
+_defaults = ['\033['+x+'m' for x in '0147']
+Color = namedtuple('Color', _color_names, defaults = _defaults)
+
+# horizontal, vertical, top left, top right, bottom left, bottom right
+Frame = namedtuple('Frame', ['horz', 'vert', 'tl', 'tr', 'bl', 'br'])
+
+
+def center(text: str, length: int = 0) -> str:
+    # global width
+    length = len(text) if length == 0 else length
+    space = width//2 - length//2
+    bonus = width%2 - length%2
+    return '{}{}{}'.format(' '*space, text, ' '*(space+bonus))
+
+
+def wrap(text: str):
+    # global edge
+    return '{1}{0}{1}\n'.format(text, edge)
+
+
 if __name__ == '__main__':
 
     options = [
-        ['n', 'name', 'name=TEXT', 'set your name or nickname to TEXT', 'nickname'],
-        ['s', 'size', 'size=NUMBER', 'set width of the card to NUMBER of chars', '46'],
+        ['n', 'name', 'name=TEXT', 'set your nickname to TEXT', 'nickname'],
+        ['w', 'width', 'width=NUMBER', 'set width of the card to NUMBER', '46'],
         ['f', 'frame', 'frame=TEXT', 'set chars of card\'s frame to TEXT', '-|╭╮╰╯'],
         ['', 'help', 'help', 'print this and exit', ''] ]
     args = Parser(sys.argv, options, desc='Business card generator', usage='[OPTIONS]')
@@ -36,50 +58,37 @@ if __name__ == '__main__':
     # Print help menu when --help used
     args('help') and exit(args.help())
 
-    name = args('name')
-    size = int(args('size')) - 2
+    width = int(args('width')) - 2
 
-    Frame = namedtuple('Frame', ['horz', 'vert', 'tl', 'tr', 'bl', 'br'])
     F = Frame(*args('frame'))
+    C = Color(*[f'\033[{code}m' for code in colors.values()])
 
-    _color_names = list(colors.keys()) + ['reset', 'bold', 'underline', 'reversed']
-    _defaults = ['\033['+x+'m' for x in '0147']
-    Color = namedtuple('Color', _color_names, defaults = _defaults)
-    C = Color(*['\033['+x+'m' for x in colors.values()])
+    edge = f'{C.border}{F.vert}{C.reset}'
+    top = f'{C.border}{F.tl}{F.horz*width}{F.tr}\n'
+    sep = f'{C.border}{F.vert}{" "*width}{F.vert}\n'
+    bottom = f'{C.border}{F.bl}{F.horz*width}{F.br}{C.reset}\n'
 
-    OFFSET = { (1, 0): 1, (1, 1): 0, (0, 0): 0, (0, 1): -1 }
-
-    edge = '{}{}{}'.format(C.border, F.vert, C.reset)
-    top = '{}{}{}{}\n'.format(C.border, F.tl, F.horz*size, F.tr)
-    sep = '{}{}{}{}\n'.format(C.border, F.vert, ' '*size, F.vert)
-    bottom = '{}{}{}{}{}\n'.format(C.border, F.bl, F.horz*size, F.br, C.reset)
+    _name = args('name')
+    _text = center(C.name+_name, len(_name))
+    head = wrap(_text)
 
     body = []
     for item in data.keys():
 
         body.append(sep)
-        if item:
-            space = size//2-len(item)//2
-            bonus = OFFSET[(size%2, len(item)%2)]
-            line = '{}{}{}{}{}{}\n'.format(edge, ' '*space, C.title, item, ' '*(space+bonus), edge)
-            body.append(line)
+        if item != '':
+            _text = center(C.title+item, len(item))
+            body.append(wrap(_text))
 
-        # loop nested dict
+        # loop over nested dict
         for key, val in data[item].items():
-            vval = val
-            val = val.replace('link:', '', 1)
-            content_len = len(key+val)+2
-            space = size//2-content_len//2
-            bonus = OFFSET[(size%2, content_len%2)]
-            if vval.startswith('link:'):
-                val = '{}{}{}'.format(C.underline, val, C.reset)
-            line = '{}{}{}{}: {}{}{}{}\n'.format(edge, ' '*space, C.key, key, C.value, val, ' '*(space+bonus), edge)
-            body.append(line)
+            _escaped = val.replace('link:', '', 1)
+            _style = C.under * (_escaped != val)
+            _segment = f'{C.key}{key}: {C.value}{_style}{_escaped}{C.reset}'
+            _length = len(key+_escaped)+2
+            _text = center(_segment, _length)
+            body.append(wrap(_text))
 
-    space = size//2-len(name)//2
-    bonus = OFFSET[(size%2, len(name)%2)]
-    head = edge+' '*space+C.name+name+' '*(space+bonus)+edge+'\n'
-
-    card = top + sep + head + ''.join(body) + sep + bottom
+    card = f'{top}{sep}{head}{"".join(body)}{sep}{bottom}'
 
     print(card, end='')
