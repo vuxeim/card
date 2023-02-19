@@ -67,14 +67,14 @@ if __name__ == '__main__':
     head = center_and_wrap(C.name+_name, len(_name))
 
     body = []
-    for item in data.keys():
+    for name, content in data.items():
 
         body.append(sep)
-        if item != '':
-            body.append(center_and_wrap(C.title+item, len(item)))
+        if name != '':
+            body.append(center_and_wrap(C.title+name, len(name)))
 
         # loop over nested dict
-        for key, val in data[item].items():
+        for key, val in content.items():
             _escaped = val.replace('link:', '', 1)
             _style = C.under * (_escaped != val)
             _segment = f'{C.key}{key}: {C.value}{_style}{_escaped}{C.reset}'
