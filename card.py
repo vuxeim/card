@@ -29,21 +29,16 @@ _color_names = list(colors.keys()) + ['reset', 'bold', 'under', 'reversed']
 _defaults = ['\033['+x+'m' for x in '0147']
 Color = namedtuple('Color', _color_names, defaults = _defaults)
 
-# horizontal, vertical, top left, top right, bottom left, bottom right
-Frame = namedtuple('Frame', ['horz', 'vert', 'tl', 'tr', 'bl', 'br'])
+# t = top, b = bottom, l = left, r = right
+Border = namedtuple('Border', ['horz', 'vert', 'tl', 'tr', 'bl', 'br'])
 
 
-def center(text: str, length: int = 0) -> str:
+def center_and_wrap(text: str, length: int) -> str:
     # global width
-    length = len(text) if length == 0 else length
+    # global edge
     space = width//2 - length//2
     bonus = width%2 - length%2
-    return '{}{}{}'.format(' '*space, text, ' '*(space+bonus))
-
-
-def wrap(text: str):
-    # global edge
-    return '{1}{0}{1}\n'.format(text, edge)
+    return f'{edge}{" "*space}{text}{" "*(space+bonus)}{edge}\n'
 
 
 if __name__ == '__main__':
@@ -60,25 +55,23 @@ if __name__ == '__main__':
 
     width = int(args('width')) - 2
 
-    F = Frame(*args('frame'))
+    B = Border(*args('frame'))
     C = Color(*[f'\033[{code}m' for code in colors.values()])
 
-    edge = f'{C.border}{F.vert}{C.reset}'
-    top = f'{C.border}{F.tl}{F.horz*width}{F.tr}\n'
-    sep = f'{C.border}{F.vert}{" "*width}{F.vert}\n'
-    bottom = f'{C.border}{F.bl}{F.horz*width}{F.br}{C.reset}\n'
+    edge = f'{C.border}{B.vert}{C.reset}'
+    top = f'{C.border}{B.tl}{B.horz*width}{B.tr}\n'
+    sep = f'{C.border}{B.vert}{" "*width}{B.vert}\n'
+    bottom = f'{C.border}{B.bl}{B.horz*width}{B.br}{C.reset}\n'
 
     _name = args('name')
-    _text = center(C.name+_name, len(_name))
-    head = wrap(_text)
+    head = center_and_wrap(C.name+_name, len(_name))
 
     body = []
     for item in data.keys():
 
         body.append(sep)
         if item != '':
-            _text = center(C.title+item, len(item))
-            body.append(wrap(_text))
+            body.append(center_and_wrap(C.title+item, len(item)))
 
         # loop over nested dict
         for key, val in data[item].items():
@@ -86,8 +79,7 @@ if __name__ == '__main__':
             _style = C.under * (_escaped != val)
             _segment = f'{C.key}{key}: {C.value}{_style}{_escaped}{C.reset}'
             _length = len(key+_escaped)+2
-            _text = center(_segment, _length)
-            body.append(wrap(_text))
+            body.append(center_and_wrap(_segment, _length))
 
     card = f'{top}{sep}{head}{"".join(body)}{sep}{bottom}'
 
