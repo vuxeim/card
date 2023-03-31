@@ -1,18 +1,15 @@
 import sys
 from collections import namedtuple
 
+
 from arsparge import Parser
 
 
-data = {
-    'CONTACT': {
-        'Email': 'user@domain',
-        'Discord': 'user#0000',
-    },
-    '': {
-        'Github': 'link:github.com/user',
-    }
-}
+try:
+    from config import data
+except ImportError:
+    print("Cannot import `data` from `config.py`")
+    exit(1)
 
 
 colors = {
@@ -28,6 +25,7 @@ colors = {
 _color_names = list(colors.keys()) + ['reset', 'bold', 'under', 'reversed']
 _defaults = ['\033['+x+'m' for x in '0147']
 Color = namedtuple('Color', _color_names, defaults = _defaults)
+
 
 # t = top, b = bottom, l = left, r = right
 Border = namedtuple('Border', ['horz', 'vert', 'tl', 'tr', 'bl', 'br'])
