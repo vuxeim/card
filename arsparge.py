@@ -29,7 +29,7 @@ class Parser:
                     args[option[1]] = args.pop(arg)
 
         for arg in list(args)[1:]:
-            if not arg in [option[1] for option in options]:
+            if arg not in [option[1] for option in options]:
                 exit('Unknown argument: '+arg)
 
         copyargs = {}

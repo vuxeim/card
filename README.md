@@ -1,6 +1,6 @@
 # card
 ## How to use
-1. Edit `data` variable in `config.py`.
+1. Edit `data` variable in `card.py` script.
 2. See the results:
 ```
 python card.py
@@ -38,3 +38,4 @@ Business card generator
 ```
 ## Troubleshooting
 Use `curl` with flag `-L` if nothing is shown.
+
